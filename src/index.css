@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: Inter, system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply antialiased text-gray-900;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (max-width: 640px) {
+    button,
+    a,
+    input[type="button"],
+    input[type="submit"] {
+      min-height: 44px;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg border border-transparent transition-colors duration-200 disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-white;
+  }
+
+  .select-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-white;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6;
+  }
+
+  .table-header {
+    @apply bg-gray-50 text-gray-700 font-semibold text-xs sm:text-sm uppercase tracking-wider px-3 sm:px-6 py-3;
+  }
+
+  .table-cell {
+    @apply px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 border-b border-gray-200;
+  }
+}
+
+/* Printable documents inside modals (quotations, etc.) */
+.print-doc {
+  @apply text-gray-900;
+}
+
+.print-doc__header {
+  @apply flex flex-wrap justify-between gap-4 border-b border-gray-200 pb-3;
+}
+
+.print-doc__brand {
+  @apply text-xl font-extrabold text-gray-900;
+}
+
+.print-doc__muted {
+  @apply text-sm text-slate-500;
+}
+
+.print-doc__meta {
+  @apply text-right text-sm;
+}
+
+.print-doc__block {
+  @apply my-4;
+}
+
+.print-doc__h {
+  @apply mb-1 text-xs font-medium uppercase tracking-wider text-slate-500;
+}
+
+.print-doc__addr {
+  @apply whitespace-pre-wrap;
+}
+
+.print-table {
+  @apply mt-2 w-full border-collapse;
+}
+
+.print-table th,
+.print-table td {
+  @apply border-b border-gray-200 px-1.5 py-2;
+}
+
+.print-table th {
+  @apply text-left text-xs text-slate-500;
+}
+
+.print-table .num {
+  @apply text-right;
+}
+
+.print-doc__total {
+  @apply mt-4 flex items-baseline justify-end gap-3;
+}
+
+.print-doc__total-amt {
+  @apply text-xl font-extrabold;
+}
+
+.print-doc__note {
+  @apply mt-4 text-xs text-slate-500;
+}
+
+@media print {
+  body {
+    @apply bg-white;
+  }
+}
