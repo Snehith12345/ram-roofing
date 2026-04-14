@@ -10,13 +10,14 @@ function env(name) {
 }
 
 const firebaseConfig = {
-  apiKey: env("VITE_FIREBASE_API_KEY"),
-  authDomain: env("VITE_FIREBASE_AUTH_DOMAIN"),
-  projectId: env("VITE_FIREBASE_PROJECT_ID"),
-  storageBucket: env("VITE_FIREBASE_STORAGE_BUCKET"),
-  messagingSenderId: env("VITE_FIREBASE_MESSAGING_SENDER_ID"),
-  appId: env("VITE_FIREBASE_APP_ID"),
-  measurementId: env("VITE_FIREBASE_MEASUREMENT_ID"),
+  apiKey: "AIzaSyDDk8c6y714TdtCDH0JxsV-qFsqHPFKrHE",
+  authDomain: "ram-roofing-47aad.firebaseapp.com",
+  databaseURL: "https://ram-roofing-47aad-default-rtdb.firebaseio.com",
+  projectId: "ram-roofing-47aad",
+  storageBucket: "ram-roofing-47aad.firebasestorage.app",
+  messagingSenderId: "993585562932",
+  appId: "1:993585562932:web:4f15c602b89e4280b65161",
+  measurementId: "G-5CYJ0J1EP2"
 };
 
 const { measurementId: _measurementId, ...requiredConfig } = firebaseConfig;
