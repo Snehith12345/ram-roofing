@@ -3,14 +3,20 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+/** Vite exposes only `VITE_*` vars; trim() avoids Vercel copy/paste whitespace issues. */
+function env(name) {
+  const v = import.meta.env[name];
+  return typeof v === "string" ? v.trim() : v;
+}
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: env("VITE_FIREBASE_API_KEY"),
+  authDomain: env("VITE_FIREBASE_AUTH_DOMAIN"),
+  projectId: env("VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: env("VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: env("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: env("VITE_FIREBASE_APP_ID"),
+  measurementId: env("VITE_FIREBASE_MEASUREMENT_ID"),
 };
 
 const { measurementId: _measurementId, ...requiredConfig } = firebaseConfig;
