@@ -62,68 +62,6 @@
   }
 }
 
-/* Printable documents inside modals (quotations, etc.) */
-.print-doc {
-  @apply text-gray-900;
-}
-
-.print-doc__header {
-  @apply flex flex-wrap justify-between gap-4 border-b border-gray-200 pb-3;
-}
-
-.print-doc__brand {
-  @apply text-xl font-extrabold text-gray-900;
-}
-
-.print-doc__muted {
-  @apply text-sm text-slate-500;
-}
-
-.print-doc__meta {
-  @apply text-right text-sm;
-}
-
-.print-doc__block {
-  @apply my-4;
-}
-
-.print-doc__h {
-  @apply mb-1 text-xs font-medium uppercase tracking-wider text-slate-500;
-}
-
-.print-doc__addr {
-  @apply whitespace-pre-wrap;
-}
-
-.print-table {
-  @apply mt-2 w-full border-collapse;
-}
-
-.print-table th,
-.print-table td {
-  @apply border-b border-gray-200 px-1.5 py-2;
-}
-
-.print-table th {
-  @apply text-left text-xs text-slate-500;
-}
-
-.print-table .num {
-  @apply text-right;
-}
-
-.print-doc__total {
-  @apply mt-4 flex items-baseline justify-end gap-3;
-}
-
-.print-doc__total-amt {
-  @apply text-xl font-extrabold;
-}
-
-.print-doc__note {
-  @apply mt-4 text-xs text-slate-500;
-}
-
 @media print {
   body {
     @apply bg-white;

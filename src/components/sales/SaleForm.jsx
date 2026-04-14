@@ -7,6 +7,11 @@ export default function SaleForm({
   customerName,
   mobile,
   address,
+  paymentMethod,
+  taxRate,
+  subtotal,
+  taxAmount,
+  total,
   onCustomerChange,
   lines,
   onLinesChange,
@@ -45,7 +50,7 @@ export default function SaleForm({
             autoComplete="tel"
           />
         </div>
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 sm:mt-4">
           <Input
             label="Address"
             name="address"
@@ -54,6 +59,19 @@ export default function SaleForm({
             required
             autoComplete="street-address"
           />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Payment method</label>
+            <select
+              className="select-field"
+              value={paymentMethod}
+              onChange={(e) => onCustomerChange({ paymentMethod: e.target.value })}
+            >
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="cheque">Cheque</option>
+              <option value="upi">UPI</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -74,6 +92,30 @@ export default function SaleForm({
         }}
         onRemove={onRemoveLine}
       />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
+        <Input
+          label="Tax (%)"
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value={String(taxRate)}
+          onChange={(e) => onCustomerChange({ taxRate: Math.max(0, Number(e.target.value || 0)) })}
+        />
+        <div>
+          <span className="mb-1 block text-sm font-medium text-gray-700">Subtotal</span>
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900">₹{subtotal.toFixed(2)}</div>
+        </div>
+        <div>
+          <span className="mb-1 block text-sm font-medium text-gray-700">Tax amount</span>
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900">₹{taxAmount.toFixed(2)}</div>
+        </div>
+        <div>
+          <span className="mb-1 block text-sm font-medium text-gray-700">Grand total</span>
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900 font-semibold">₹{total.toFixed(2)}</div>
+        </div>
+      </div>
 
       {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 

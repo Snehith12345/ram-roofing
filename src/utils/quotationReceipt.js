@@ -1,3 +1,6 @@
+import { toJsDate } from "./dateUtils.js";
+import { normalizeUnit } from "../constants/units.js";
+
 /** @param {unknown} s */
 function escapeHtml(s) {
   return String(s ?? "")
@@ -8,33 +11,33 @@ function escapeHtml(s) {
 }
 
 /**
- * Opens a printable sales receipt (same layout sample as Enterprise app).
- * @param {object} sale
- * @param {string} sale.id
- * @param {string} sale.customerName
- * @param {string} [sale.mobile]
- * @param {string} [sale.address]
- * @param {Array<{ name: string, qty: number, price: number, unit?: string }>} sale.items
- * @param {number} sale.total
- * @param {number} [sale.subtotal]
- * @param {number} [sale.taxAmount]
- * @param {number} [sale.taxRate]
- * @param {string} [sale.paymentMethod]
- * @param {{ soldBy?: string }} [opts]
+ * Opens a printable quotation using the same layout as the sales receipt window.
+ * @param {object} quotation
+ * @param {string} quotation.id
+ * @param {string} quotation.customerName
+ * @param {string} [quotation.mobile]
+ * @param {string} [quotation.address]
+ * @param {Array<{ name: string, qty: number, price: number, unit?: string }>} quotation.items
+ * @param {number} quotation.total
+ * @param {string} [quotation.status]
  * @returns {boolean} false if popup blocked
  */
-export function openSalesReceiptWindow(sale, opts = {}) {
+export function openQuotationReceiptWindow(quotation) {
   const receiptWindow = window.open("", "_blank", "width=800,height=600");
   if (!receiptWindow) return false;
 
-  const soldBy = opts.soldBy?.trim() || "—";
-  const items = Array.isArray(sale.items) ? sale.items : [];
+  const created = toJsDate(quotation.createdAt) ?? new Date();
+  const dateStr = created.toLocaleDateString();
+  const timeStr = created.toLocaleTimeString();
+  const status = String(quotation.status || "pending");
+
+  const items = Array.isArray(quotation.items) ? quotation.items : [];
   const rows = items
     .map(
       (it) => `
       <tr>
         <td>${escapeHtml(it.name)}</td>
-        <td>${escapeHtml(String(it.qty ?? ""))} ${escapeHtml(it.unit || "units")}</td>
+        <td>${escapeHtml(String(it.qty ?? ""))} ${escapeHtml(normalizeUnit(it.unit))}</td>
         <td>₹${Number(it.price || 0).toFixed(2)}</td>
         <td>₹${(Number(it.qty || 0) * Number(it.price || 0)).toFixed(2)}</td>
       </tr>`,
@@ -45,13 +48,13 @@ export function openSalesReceiptWindow(sale, opts = {}) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Receipt - ${escapeHtml(sale.id)}</title>
+        <title>Quotation - ${escapeHtml(quotation.id)}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
           .company-name { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
           .document-type { font-size: 14px; letter-spacing: 0.08em; }
-          .sale-info { margin-bottom: 16px; }
+          .quote-info { margin-bottom: 16px; }
           .customer-info { margin-bottom: 20px; }
           .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           .items-table th, .items-table td { border: 1px solid #000; padding: 8px; text-align: left; }
@@ -66,22 +69,21 @@ export function openSalesReceiptWindow(sale, opts = {}) {
       <body>
         <div class="header">
           <div class="company-name">RAM ROOFING INDUSTRIES</div>
-          <div class="document-type">SALES RECEIPT</div>
+          <div class="document-type">QUOTATION</div>
         </div>
 
-        <div class="sale-info">
-          <strong>Sale ID:</strong> ${escapeHtml(sale.id)}<br>
-          <strong>Date:</strong> ${escapeHtml(new Date().toLocaleDateString())}<br>
-          <strong>Time:</strong> ${escapeHtml(new Date().toLocaleTimeString())}
+        <div class="quote-info">
+          <strong>Quotation ID:</strong> ${escapeHtml(quotation.id)}<br>
+          <strong>Date:</strong> ${escapeHtml(dateStr)}<br>
+          <strong>Time:</strong> ${escapeHtml(timeStr)}<br>
+          <strong>Status:</strong> ${escapeHtml(status)}
         </div>
 
         <div class="customer-info">
           <strong>Bill To:</strong><br>
-          <strong>Customer:</strong> ${escapeHtml(sale.customerName)}<br>
-          ${sale.mobile ? `<strong>Phone:</strong> ${escapeHtml(sale.mobile)}<br>` : ""}
-          ${sale.address ? `<strong>Address:</strong><br>${escapeHtml(sale.address)}<br>` : ""}
-          <strong>Payment:</strong> ${escapeHtml(String(sale.paymentMethod || "cash").toUpperCase())}<br>
-          <strong>Sold by:</strong> ${escapeHtml(soldBy)}
+          <strong>Customer:</strong> ${escapeHtml(quotation.customerName)}<br>
+          ${quotation.mobile ? `<strong>Phone:</strong> ${escapeHtml(quotation.mobile)}<br>` : ""}
+          ${quotation.address ? `<strong>Address:</strong><br>${escapeHtml(quotation.address)}<br>` : ""}
         </div>
 
         <table class="items-table">
@@ -99,22 +101,13 @@ export function openSalesReceiptWindow(sale, opts = {}) {
         </table>
 
         <div class="totals">
-          ${
-            Number(sale.subtotal) > 0
-              ? `<div class="total-line">Subtotal: ₹${Number(sale.subtotal || 0).toFixed(2)}</div>`
-              : ""
-          }
-          ${
-            Number(sale.taxAmount) > 0
-              ? `<div class="total-line">Tax (${Number(sale.taxRate || 0).toFixed(2)}%): ₹${Number(sale.taxAmount || 0).toFixed(2)}</div>`
-              : ""
-          }
-          <div class="total-line grand-total">Total: ₹${Number(sale.total || 0).toFixed(2)}</div>
+          <div class="total-line grand-total">Total: ₹${Number(quotation.total || 0).toFixed(2)}</div>
         </div>
 
         <div class="footer">
-          <p>Thank you for your business!</p>
-          <p> ${escapeHtml(new Date().toLocaleString())}</p>
+          <p>This quotation is valid subject to stock availability and RAM Roofing terms.</p>
+          <p>Thank you for your interest!</p>
+          <p>${escapeHtml(new Date().toLocaleString())}</p>
         </div>
       </body>
       </html>

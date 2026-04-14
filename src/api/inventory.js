@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config.js";
 import { pollCollection } from "./pollFirestore.js";
+import { normalizeUnit } from "../constants/units.js";
 
 const inventoryCol = collection(db, "inventory");
 
@@ -24,21 +25,23 @@ export const subscribeInventory = (onData, onError) =>
     onError,
   );
 
-export const addInventoryItem = async ({ name, price, quantity }) => {
+export const addInventoryItem = async ({ name, price, quantity, unit }) => {
   await addDoc(inventoryCol, {
     name: String(name).trim(),
     price: Number(price),
     quantity: Number(quantity),
+    unit: normalizeUnit(unit),
     createdAt: serverTimestamp(),
   });
 };
 
-export const updateInventoryItem = async (id, { name, price, quantity }) => {
+export const updateInventoryItem = async (id, { name, price, quantity, unit }) => {
   const ref = doc(db, "inventory", id);
   await updateDoc(ref, {
     name: String(name).trim(),
     price: Number(price),
     quantity: Number(quantity),
+    unit: normalizeUnit(unit),
   });
 };
 

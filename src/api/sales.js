@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   serverTimestamp,
@@ -62,4 +63,8 @@ export const createSale = async (saleData) => {
 
   await batch.commit();
   return saleRef.id;
+};
+
+export const deleteSale = async (id) => {
+  await deleteDoc(doc(db, "sales", id));
 };

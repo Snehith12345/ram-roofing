@@ -1,5 +1,6 @@
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
+import { UNIT_OPTIONS, normalizeUnit } from "../../constants/units.js";
 
 export default function AddItem({ initial, onSubmit, submitting, onCancel }) {
   const isEdit = Boolean(initial?.id);
@@ -14,6 +15,7 @@ export default function AddItem({ initial, onSubmit, submitting, onCancel }) {
           name: fd.get("name"),
           price: fd.get("price"),
           quantity: fd.get("quantity"),
+          unit: fd.get("unit"),
         });
       }}
     >
@@ -37,6 +39,18 @@ export default function AddItem({ initial, onSubmit, submitting, onCancel }) {
           defaultValue={initial?.quantity ?? ""}
           required
         />
+      </div>
+      <div>
+        <label htmlFor="unit" className="mb-1 block text-sm font-medium text-gray-700">
+          Quantity unit
+        </label>
+        <select id="unit" name="unit" className="select-field" defaultValue={normalizeUnit(initial?.unit)}>
+          {UNIT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         {onCancel ? (

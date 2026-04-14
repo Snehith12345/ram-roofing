@@ -16,7 +16,9 @@ export default function Sales() {
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
   const [address, setAddress] = useState("");
-  const [lines, setLines] = useState([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1 }]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [taxRate, setTaxRate] = useState(0);
+  const [lines, setLines] = useState([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [receiptError, setReceiptError] = useState("");
@@ -34,7 +36,7 @@ export default function Sales() {
     return () => unsub();
   }, []);
 
-  const total = useMemo(
+  const subtotal = useMemo(
     () =>
       lines.reduce((acc, l) => {
         if (!l.id) return acc;
@@ -42,6 +44,8 @@ export default function Sales() {
       }, 0),
     [lines],
   );
+  const taxAmount = useMemo(() => subtotal * (Math.max(0, Number(taxRate) || 0) / 100), [subtotal, taxRate]);
+  const total = useMemo(() => subtotal + taxAmount, [subtotal, taxAmount]);
 
   const soldByLabel = user?.email || user?.uid || "";
 
@@ -56,6 +60,7 @@ export default function Sales() {
         name: l.name,
         qty: Number(l.qty),
         price: Number(l.price),
+        unit: l.unit || "units",
       }));
     if (!customerName.trim() || !mobile.trim() || !address.trim()) {
       setError("Please fill customer name, mobile, and address.");
@@ -65,12 +70,20 @@ export default function Sales() {
       setError("Add at least one inventory line.");
       return;
     }
+    if (!paymentMethod) {
+      setError("Please select a payment method.");
+      return;
+    }
     try {
       setSubmitting(true);
       const salePayload = {
         customerName: customerName.trim(),
         mobile: mobile.trim(),
         address: address.trim(),
+        paymentMethod,
+        taxRate: Math.max(0, Number(taxRate) || 0),
+        subtotal,
+        taxAmount,
         items: cleaned,
         total,
       };
@@ -85,7 +98,9 @@ export default function Sales() {
       setCustomerName("");
       setMobile("");
       setAddress("");
-      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1 }]);
+      setPaymentMethod("cash");
+      setTaxRate(0);
+      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }]);
     } catch (e) {
       setError(e?.message || "Could not complete sale.");
     } finally {
@@ -123,17 +138,24 @@ export default function Sales() {
             if ("customerName" in patch) setCustomerName(patch.customerName);
             if ("mobile" in patch) setMobile(patch.mobile);
             if ("address" in patch) setAddress(patch.address);
+            if ("paymentMethod" in patch) setPaymentMethod(patch.paymentMethod);
+            if ("taxRate" in patch) setTaxRate(patch.taxRate);
           }}
+          paymentMethod={paymentMethod}
+          taxRate={taxRate}
+          subtotal={subtotal}
+          taxAmount={taxAmount}
+          total={total}
           lines={lines}
           onLinesChange={setLines}
-          onAddLine={() => setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: 1 }])}
+          onAddLine={() => setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }])}
           onRemoveLine={(idx) => setLines((ls) => ls.filter((_, i) => i !== idx))}
           onSubmit={submit}
           submitting={submitting}
           error={error}
         />
         <div className="mt-4 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-          <span className="text-sm text-gray-600">Sale total</span>
+          <span className="text-sm text-gray-600">Final payable</span>
           <span className="text-lg font-bold text-gray-900">₹{total.toFixed(2)}</span>
         </div>
       </div>

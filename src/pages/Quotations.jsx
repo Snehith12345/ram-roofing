@@ -8,8 +8,8 @@ import {
 } from "../api/quotations.js";
 import { subscribeInventory } from "../api/inventory.js";
 import QuotationForm from "../components/quotation/QuotationForm.jsx";
-import PrintQuotation from "../components/quotation/PrintQuotation.jsx";
 import Modal from "../components/common/Modal.jsx";
+import { openQuotationReceiptWindow } from "../utils/quotationReceipt.js";
 import Button from "../components/common/Button.jsx";
 import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js";
 
@@ -17,7 +17,9 @@ export default function Quotations() {
   const [inventory, setInventory] = useState([]);
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
-  const [printRow, setPrintRow] = useState(null);
+  const [printLoadingId, setPrintLoadingId] = useState("");
+  const [showNewQuotation, setShowNewQuotation] = useState(false);
+  const [savingStatusId, setSavingStatusId] = useState("");
 
   useEffect(() => {
     const unsubInv = subscribeInventory(setInventory, (e) =>
@@ -36,6 +38,47 @@ export default function Quotations() {
     };
   }, []);
 
+  const normalizeStatus = (status) => {
+    if (status === "declined") return "cancelled";
+    return status || "pending";
+  };
+
+  const statusSelectClass = (status) => {
+    if (status === "converted") {
+      return "border-green-200 bg-green-50 text-green-700";
+    }
+    if (status === "cancelled" || status === "declined") {
+      return "border-red-200 bg-red-50 text-red-700";
+    }
+    return "border-amber-300 bg-amber-50 text-amber-800";
+  };
+
+  const handleStatusChange = async (quotationId, nextStatus) => {
+    const prevRows = rows;
+    setRows((curr) => curr.map((q) => (q.id === quotationId ? { ...q, status: nextStatus } : q)));
+    setSavingStatusId(quotationId);
+    setError("");
+    try {
+      await updateQuotationStatus(quotationId, nextStatus);
+    } catch (e) {
+      setRows(prevRows);
+      setError(e?.message || "Could not update status.");
+    } finally {
+      setSavingStatusId("");
+    }
+  };
+
+  const handlePrintQuotation = (q) => {
+    setPrintLoadingId(q.id);
+    window.setTimeout(() => {
+      const ok = openQuotationReceiptWindow(q);
+      if (!ok) {
+        setError((prev) => prev || "Print blocked: allow pop-ups for this site, then try again.");
+      }
+      setPrintLoadingId("");
+    }, 450);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <Link to="/" className="inline-block text-sm text-gray-600 hover:text-gray-900">
@@ -48,9 +91,10 @@ export default function Quotations() {
 
       {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-      <div className="card">
-        <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">New quotation</h3>
-        <QuotationForm inventory={inventory} onSubmit={(payload) => createQuotation(payload)} />
+      <div className="flex items-center justify-end">
+        <Button type="button" onClick={() => setShowNewQuotation(true)}>
+          + New quotation
+        </Button>
       </div>
 
       <div className="card">
@@ -77,18 +121,27 @@ export default function Quotations() {
                     <td className="table-cell text-right font-medium">{formatCurrency(q.total)}</td>
                     <td className="table-cell">
                       <select
-                        className="select-field max-w-[160px] py-2 text-sm"
-                        value={q.status || "pending"}
-                        onChange={(e) => updateQuotationStatus(q.id, e.target.value)}
+                        className={`w-[130px] rounded-full border px-3 py-1.5 text-sm font-semibold outline-none transition ${statusSelectClass(
+                          q.status,
+                        )}`}
+                        value={normalizeStatus(q.status)}
+                        onChange={(e) => handleStatusChange(q.id, e.target.value)}
+                        disabled={savingStatusId === q.id}
                       >
                         <option value="pending">pending</option>
                         <option value="converted">converted</option>
-                        <option value="declined">declined</option>
+                        <option value="cancelled">cancelled</option>
                       </select>
                     </td>
                     <td className="table-cell text-right">
-                      <Button type="button" variant="ghost" className="mr-1 inline-flex" onClick={() => setPrintRow(q)}>
-                        Print
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="mr-1 inline-flex"
+                        disabled={!!printLoadingId}
+                        onClick={() => handlePrintQuotation(q)}
+                      >
+                        {printLoadingId === q.id ? "Opening…" : "Print"}
                       </Button>
                       <Button
                         type="button"
@@ -114,9 +167,28 @@ export default function Quotations() {
         )}
       </div>
 
-      {printRow ? (
-        <Modal title="Quotation" onClose={() => setPrintRow(null)} wide>
-          <PrintQuotation quotation={printRow} />
+      {printLoadingId ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="rounded-xl bg-white px-8 py-6 shadow-lg">
+            <div className="mx-auto mb-3 h-9 w-9 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
+            <p className="text-center text-sm font-medium text-gray-800">Preparing quotation…</p>
+          </div>
+        </div>
+      ) : null}
+
+      {showNewQuotation ? (
+        <Modal title="New quotation" onClose={() => setShowNewQuotation(false)} wide>
+          <QuotationForm
+            inventory={inventory}
+            onSubmit={async (payload) => {
+              await createQuotation(payload);
+              setShowNewQuotation(false);
+            }}
+          />
         </Modal>
       ) : null}
     </div>

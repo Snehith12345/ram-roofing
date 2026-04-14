@@ -1,5 +1,6 @@
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
+import { normalizeUnit } from "../../constants/units.js";
 
 export default function SaleItemList({ inventory, lines, onChange, onRemove }) {
   return (
@@ -20,19 +21,20 @@ export default function SaleItemList({ inventory, lines, onChange, onRemove }) {
                     name: inv?.name ?? "",
                     price: inv ? Number(inv.price) : 0,
                     qty: line.qty,
+                    unit: normalizeUnit(inv?.unit),
                   });
                 }}
               >
                 <option value="">Select…</option>
                 {inventory.map((it) => (
                   <option key={it.id} value={it.id}>
-                    {it.name} (stock {Number(it.quantity ?? 0)})
+                    {it.name} (stock {Number(it.quantity ?? 0)} {normalizeUnit(it.unit)})
                   </option>
                 ))}
               </select>
             </label>
             <Input
-              label="Qty"
+              label={`Qty (${normalizeUnit(line.unit)})`}
               type="number"
               min="1"
               value={String(line.qty)}
@@ -45,9 +47,18 @@ export default function SaleItemList({ inventory, lines, onChange, onRemove }) {
             />
             <div>
               <span className="mb-1 block text-sm font-medium text-gray-700">Unit price</span>
-              <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900">
-                {Number(line.price || 0).toFixed(2)}
-              </div>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={String(line.price ?? 0)}
+                onChange={(e) =>
+                  onChange(idx, {
+                    ...line,
+                    price: Math.max(0, Number(e.target.value || 0)),
+                  })
+                }
+              />
             </div>
             <div>
               <span className="mb-1 block text-sm font-medium text-gray-700">Line total</span>

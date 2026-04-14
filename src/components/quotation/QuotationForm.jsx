@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
+import { UNIT_OPTIONS, normalizeUnit } from "../../constants/units.js";
 
 function newLineKey() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -11,7 +12,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
   const [mobile, setMobile] = useState("");
   const [address, setAddress] = useState("");
   const [lines, setLines] = useState([
-    { key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false },
+    { key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false, unit: "units" },
   ]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +31,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
         name: l.name.trim(),
         qty: Number(l.qty),
         price: Number(l.price),
+        unit: normalizeUnit(l.unit),
       }));
     if (!customerName.trim()) {
       setError("Customer name is required.");
@@ -52,7 +54,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
       setCustomerName("");
       setMobile("");
       setAddress("");
-      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false }]);
+      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false, unit: "units" }]);
     } catch (e) {
       setError(e?.message || "Could not save quotation.");
     } finally {
@@ -74,7 +76,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
           type="button"
           variant="secondary"
           onClick={() =>
-            setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false }])
+            setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: 1, isCustom: false, unit: "units" }])
           }
         >
           + Add line
@@ -83,7 +85,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
 
       {lines.map((line, idx) => (
         <div key={line.key} className="rounded-lg border border-gray-200 bg-gray-50/50 p-3 sm:p-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto] lg:items-end">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1.2fr_0.9fr_1fr_1fr_1fr_auto] lg:items-end">
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-gray-700">From inventory</span>
               <select
@@ -93,7 +95,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
                   const v = e.target.value;
                   if (v === "__custom__") {
                     const copy = [...lines];
-                    copy[idx] = { ...copy[idx], isCustom: true, id: "", name: "", price: 0 };
+                    copy[idx] = { ...copy[idx], isCustom: true, id: "", name: "", price: 0, unit: "units" };
                     setLines(copy);
                     return;
                   }
@@ -105,6 +107,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
                     id: v,
                     name: inv?.name ?? "",
                     price: inv ? Number(inv.price) : 0,
+                    unit: normalizeUnit(inv?.unit),
                   };
                   setLines(copy);
                 }}
@@ -139,7 +142,7 @@ export default function QuotationForm({ inventory, onSubmit }) {
             )}
 
             <Input
-              label="Qty"
+              label={`Qty (${normalizeUnit(line.unit)})`}
               type="number"
               min="1"
               value={String(line.qty)}
@@ -149,6 +152,25 @@ export default function QuotationForm({ inventory, onSubmit }) {
                 setLines(copy);
               }}
             />
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+              <select
+                className="select-field"
+                value={normalizeUnit(line.unit)}
+                onChange={(e) => {
+                  const copy = [...lines];
+                  copy[idx] = { ...copy[idx], unit: normalizeUnit(e.target.value) };
+                  setLines(copy);
+                }}
+                disabled={!line.isCustom}
+              >
+                {UNIT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Input
               label="Unit price"
               type="number"

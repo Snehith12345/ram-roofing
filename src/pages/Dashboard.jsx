@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ShoppingCart, Package, RefreshCw } from "lucide-react";
+import { FileText, ShoppingCart, Package, BarChart3, RefreshCw } from "lucide-react";
 import { subscribeSales } from "../api/sales.js";
 import SummaryCards from "../components/dashboard/SummaryCards.jsx";
 import SalesChart from "../components/dashboard/SalesChart.jsx";
-import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Dashboard() {
@@ -25,8 +24,6 @@ export default function Dashboard() {
     );
     return () => unsub();
   }, [refreshKey]);
-
-  const recent = sales.slice(0, 8);
 
   const loadDashboardStats = async () => {
     setIsRefreshing(true);
@@ -59,6 +56,13 @@ export default function Dashboard() {
       color: "bg-orange-500",
       href: "/inventory",
     },
+    {
+      title: "Sales dashboard",
+      description: "View all sales and payment method totals",
+      icon: BarChart3,
+      color: "bg-purple-500",
+      href: "/sales-dashboard",
+    },
   ];
 
   return (
@@ -79,7 +83,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {dashboardCards.map((card, index) => {
           const IconComponent = card.icon;
           return (
@@ -111,34 +115,6 @@ export default function Dashboard() {
 
       <SummaryCards sales={sales} />
       <SalesChart sales={sales} />
-
-      <div className="card">
-        <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">Recent sales</h3>
-        {!recent.length ? (
-          <div className="py-6 text-center text-sm text-gray-500">No sales recorded yet.</div>
-        ) : (
-          <div className="overflow-x-auto rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="table-header text-left">When</th>
-                  <th className="table-header text-left">Customer</th>
-                  <th className="table-header text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {recent.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="table-cell">{formatDateTime(toJsDate(s.createdAt))}</td>
-                    <td className="table-cell">{s.customerName}</td>
-                    <td className="table-cell text-right font-medium">{formatCurrency(s.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

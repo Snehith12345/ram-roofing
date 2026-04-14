@@ -1,5 +1,6 @@
 import Button from "../common/Button.jsx";
 import { formatCurrency } from "../../utils/dateUtils.js";
+import { normalizeUnit } from "../../constants/units.js";
 
 export default function InventoryList({ items, onEdit, onDelete }) {
   if (!items.length) {
@@ -22,7 +23,9 @@ export default function InventoryList({ items, onEdit, onDelete }) {
             <tr key={it.id} className="hover:bg-gray-50">
               <td className="table-cell font-medium">{it.name}</td>
               <td className="table-cell text-right">{formatCurrency(it.price)}</td>
-              <td className="table-cell text-right">{Number(it.quantity ?? 0)}</td>
+              <td className="table-cell text-right">
+                {Number(it.quantity ?? 0)} {normalizeUnit(it.unit)}
+              </td>
               <td className="table-cell text-right">
                 <Button type="button" variant="ghost" className="mr-1 inline-flex" onClick={() => onEdit(it)}>
                   Edit

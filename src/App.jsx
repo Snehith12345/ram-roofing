@@ -5,6 +5,7 @@ import Navbar from "./components/layout/Navbar.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Sales from "./pages/Sales.jsx";
+import SalesDashboard from "./pages/SalesDashboard.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import Quotations from "./pages/Quotations.jsx";
 
@@ -49,6 +50,7 @@ export default function App() {
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/sales" element={<Sales />} />
+        <Route path="/sales-dashboard" element={<SalesDashboard />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/quotations" element={<Quotations />} />
       </Route>

@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { aggregateSalesTotals } from "../../utils/dateUtils.js";
+import { toJsDate } from "../../utils/dateUtils.js";
 
 const buckets = [
   { id: "day", label: "Daily" },
@@ -22,15 +22,57 @@ function formatInrTooltip(value) {
   return `₹${n.toFixed(2)}`;
 }
 
+function keyForDate(date, bucket) {
+  if (bucket === "day") {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+  if (bucket === "month") {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+  return `${date.getFullYear()}`;
+}
+
+function buildTimeBuckets(bucket) {
+  const now = new Date();
+  const rows = [];
+  if (bucket === "day") {
+    for (let i = 29; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      rows.push({ key: keyForDate(d, "day"), label: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`, total: 0 });
+    }
+    return rows;
+  }
+  if (bucket === "month") {
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      rows.push({ key: keyForDate(d, "month"), label: `${d.toLocaleString("en-US", { month: "short" })} ${String(d.getFullYear()).slice(-2)}`, total: 0 });
+    }
+    return rows;
+  }
+  for (let i = 4; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear() - i, 0, 1);
+    rows.push({ key: keyForDate(d, "year"), label: String(d.getFullYear()), total: 0 });
+  }
+  return rows;
+}
+
 export default function SalesChart({ sales }) {
   const [bucket, setBucket] = useState("month");
 
   const data = useMemo(() => {
-    const rows = aggregateSalesTotals(sales, bucket).slice(-24);
-    return rows.map((r) => ({
-      label: r.period,
-      total: r.total,
-    }));
+    const rows = buildTimeBuckets(bucket);
+    const rowByKey = new Map(rows.map((r) => [r.key, r]));
+    for (const sale of sales) {
+      // Fallback to `sale.date` for older rows where `createdAt` may be missing.
+      const d = toJsDate(sale.createdAt) || toJsDate(sale.date);
+      if (!d) continue;
+      const key = keyForDate(d, bucket);
+      const row = rowByKey.get(key);
+      if (!row) continue;
+      const n = Number(sale.total ?? 0);
+      if (!Number.isNaN(n)) row.total += n;
+    }
+    return rows.map(({ key, ...rest }) => rest);
   }, [sales, bucket]);
 
   return (
