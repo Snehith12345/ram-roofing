@@ -8,19 +8,47 @@ import { useAuth } from "../context/AuthContext.jsx";
 
 const PAYMENT_METHODS = ["cash", "card", "cheque", "upi"];
 
+function SalesDashboardSkeleton() {
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="card animate-pulse space-y-2">
+            <div className="h-3 w-28 rounded bg-gray-200" />
+            <div className="h-8 w-36 rounded bg-gray-200" />
+          </div>
+        ))}
+      </div>
+      <div className="card animate-pulse">
+        <div className="mb-4 h-5 w-48 rounded bg-gray-200" />
+        <div className="space-y-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="h-11 rounded-lg bg-gray-100" />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function SalesDashboard() {
   const { user } = useAuth();
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     const unsub = subscribeSales(
       (rows) => {
         setError("");
         setSales(rows);
+        setInitialLoad(false);
       },
-      (e) => setError(e?.message || "Could not load sales dashboard."),
+      (e) => {
+        setError(e?.message || "Could not load sales dashboard.");
+        setInitialLoad(false);
+      },
     );
     return () => unsub();
   }, []);
@@ -85,6 +113,10 @@ export default function SalesDashboard() {
 
       {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
+      {initialLoad ? (
+        <SalesDashboardSkeleton />
+      ) : (
+        <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <div className="card">
           <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Total sales amount</div>
@@ -162,6 +194,8 @@ export default function SalesDashboard() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

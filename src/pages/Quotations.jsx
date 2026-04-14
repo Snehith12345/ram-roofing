@@ -11,6 +11,7 @@ import QuotationForm from "../components/quotation/QuotationForm.jsx";
 import Modal from "../components/common/Modal.jsx";
 import { openQuotationReceiptWindow } from "../utils/quotationReceipt.js";
 import Button from "../components/common/Button.jsx";
+import InitialLoadPlaceholder from "../components/common/InitialLoadPlaceholder.jsx";
 import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js";
 
 export default function Quotations() {
@@ -20,6 +21,7 @@ export default function Quotations() {
   const [printLoadingId, setPrintLoadingId] = useState("");
   const [showNewQuotation, setShowNewQuotation] = useState(false);
   const [savingStatusId, setSavingStatusId] = useState("");
+  const [quotationsReady, setQuotationsReady] = useState(false);
 
   useEffect(() => {
     const unsubInv = subscribeInventory(setInventory, (e) =>
@@ -29,8 +31,12 @@ export default function Quotations() {
       (list) => {
         setError("");
         setRows(list);
+        setQuotationsReady(true);
       },
-      (e) => setError(e?.message || "Could not load quotations."),
+      (e) => {
+        setError(e?.message || "Could not load quotations.");
+        setQuotationsReady(true);
+      },
     );
     return () => {
       unsubInv();
@@ -99,7 +105,9 @@ export default function Quotations() {
 
       <div className="card">
         <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">Saved quotations</h3>
-        {!rows.length ? (
+        {!quotationsReady ? (
+          <InitialLoadPlaceholder label="Loading quotations…" />
+        ) : !rows.length ? (
           <div className="py-6 text-center text-sm text-gray-500">No quotations yet.</div>
         ) : (
           <div className="overflow-x-auto rounded-lg">
