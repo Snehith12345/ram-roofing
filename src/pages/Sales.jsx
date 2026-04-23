@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createSale } from "../api/sales.js";
+import { updateQuotationStatus } from "../api/quotations.js";
 import { subscribeInventory } from "../api/inventory.js";
 import SaleForm from "../components/sales/SaleForm.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -11,14 +12,31 @@ function newLineKey() {
 }
 
 export default function Sales() {
+  const location = useLocation();
+  const prefill = location.state?.quotation;
+
   const { user } = useAuth();
   const [inventory, setInventory] = useState([]);
-  const [customerName, setCustomerName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [address, setAddress] = useState("");
+  const [customerName, setCustomerName] = useState(prefill?.customerName || "");
+  const [mobile, setMobile] = useState(prefill?.mobile || "");
+  const [address, setAddress] = useState(prefill?.address || "");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [taxRate, setTaxRate] = useState(0);
-  const [lines, setLines] = useState([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }]);
+  const [needShipping, setNeedShipping] = useState(false);
+  const [shippingCharge, setShippingCharge] = useState(0);
+
+  const initialLines = prefill?.items?.length
+    ? prefill.items.map((item) => ({
+        key: newLineKey(),
+        id: item.id || "",
+        name: item.name || "",
+        price: item.price || 0,
+        qty: item.qty || 1,
+        unit: item.unit || "units",
+      }))
+    : [{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }];
+
+  const [lines, setLines] = useState(initialLines);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [receiptError, setReceiptError] = useState("");
@@ -45,7 +63,7 @@ export default function Sales() {
     [lines],
   );
   const taxAmount = useMemo(() => subtotal * (Math.max(0, Number(taxRate) || 0) / 100), [subtotal, taxRate]);
-  const total = useMemo(() => subtotal + taxAmount, [subtotal, taxAmount]);
+  const total = useMemo(() => subtotal + taxAmount + (needShipping ? Number(shippingCharge) || 0 : 0), [subtotal, taxAmount, needShipping, shippingCharge]);
 
   const soldByLabel = user?.email || user?.uid || "";
 
@@ -84,10 +102,19 @@ export default function Sales() {
         taxRate: Math.max(0, Number(taxRate) || 0),
         subtotal,
         taxAmount,
+        needShipping,
+        shippingCharge: needShipping ? Math.max(0, Number(shippingCharge) || 0) : 0,
         items: cleaned,
         total,
       };
       const id = await createSale(salePayload);
+      if (prefill?.id) {
+         try {
+           await updateQuotationStatus(prefill.id, "converted");
+         } catch (e) {
+           console.error("Failed to update quotation status", e);
+         }
+      }
       const completedSale = { id, ...salePayload };
       const opened = openSalesReceiptWindow(completedSale, { soldBy: soldByLabel });
       if (!opened) {
@@ -100,6 +127,8 @@ export default function Sales() {
       setAddress("");
       setPaymentMethod("cash");
       setTaxRate(0);
+      setNeedShipping(false);
+      setShippingCharge(0);
       setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }]);
     } catch (e) {
       setError(e?.message || "Could not complete sale.");
@@ -140,9 +169,13 @@ export default function Sales() {
             if ("address" in patch) setAddress(patch.address);
             if ("paymentMethod" in patch) setPaymentMethod(patch.paymentMethod);
             if ("taxRate" in patch) setTaxRate(patch.taxRate);
+            if ("needShipping" in patch) setNeedShipping(patch.needShipping);
+            if ("shippingCharge" in patch) setShippingCharge(patch.shippingCharge);
           }}
           paymentMethod={paymentMethod}
           taxRate={taxRate}
+          needShipping={needShipping}
+          shippingCharge={shippingCharge}
           subtotal={subtotal}
           taxAmount={taxAmount}
           total={total}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   createQuotation,
   deleteQuotation,
@@ -15,6 +15,7 @@ import InitialLoadPlaceholder from "../components/common/InitialLoadPlaceholder.
 import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js";
 
 export default function Quotations() {
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
@@ -22,6 +23,19 @@ export default function Quotations() {
   const [showNewQuotation, setShowNewQuotation] = useState(false);
   const [savingStatusId, setSavingStatusId] = useState("");
   const [quotationsReady, setQuotationsReady] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) return rows;
+    const lower = searchQuery.toLowerCase();
+    return rows.filter((q) => {
+      const qId = String(q.id || "").toLowerCase();
+      const cName = String(q.customerName || "").toLowerCase();
+      const mobile = String(q.mobile || "").toLowerCase();
+      const dateStr = formatDateTime(toJsDate(q.createdAt)).toLowerCase();
+      return qId.includes(lower) || cName.includes(lower) || mobile.includes(lower) || dateStr.includes(lower);
+    });
+  }, [rows, searchQuery]);
 
   useEffect(() => {
     const unsubInv = subscribeInventory(setInventory, (e) =>
@@ -59,9 +73,14 @@ export default function Quotations() {
     return "border-amber-300 bg-amber-50 text-amber-800";
   };
 
-  const handleStatusChange = async (quotationId, nextStatus) => {
+  const handleStatusChange = async (q, nextStatus) => {
+    if (nextStatus === "converted") {
+      navigate("/sales", { state: { quotation: q } });
+      return;
+    }
+    const quotationId = q.id;
     const prevRows = rows;
-    setRows((curr) => curr.map((q) => (q.id === quotationId ? { ...q, status: nextStatus } : q)));
+    setRows((curr) => curr.map((row) => (row.id === quotationId ? { ...row, status: nextStatus } : row)));
     setSavingStatusId(quotationId);
     setError("");
     try {
@@ -97,7 +116,14 @@ export default function Quotations() {
 
       {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <input
+          type="search"
+          placeholder="Search by ID, name, mobile, date..."
+          className="w-full sm:max-w-md rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         <Button type="button" onClick={() => setShowNewQuotation(true)}>
           + New quotation
         </Button>
@@ -107,25 +133,29 @@ export default function Quotations() {
         <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-lg">Saved quotations</h3>
         {!quotationsReady ? (
           <InitialLoadPlaceholder label="Loading quotations…" />
-        ) : !rows.length ? (
-          <div className="py-6 text-center text-sm text-gray-500">No quotations yet.</div>
+        ) : !filteredRows.length ? (
+          <div className="py-6 text-center text-sm text-gray-500">No quotations found.</div>
         ) : (
           <div className="overflow-x-auto rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="table-header text-left">ID</th>
                   <th className="table-header text-left">When</th>
                   <th className="table-header text-left">Customer</th>
+                  <th className="table-header text-left">Mobile</th>
                   <th className="table-header text-right">Total</th>
                   <th className="table-header text-left">Status</th>
                   <th className="table-header text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {rows.map((q) => (
+                {filteredRows.map((q) => (
                   <tr key={q.id} className="hover:bg-gray-50">
+                    <td className="table-cell font-mono text-xs">{q.id}</td>
                     <td className="table-cell">{formatDateTime(toJsDate(q.createdAt))}</td>
                     <td className="table-cell">{q.customerName}</td>
+                    <td className="table-cell">{q.mobile || "—"}</td>
                     <td className="table-cell text-right font-medium">{formatCurrency(q.total)}</td>
                     <td className="table-cell">
                       <select
@@ -133,7 +163,7 @@ export default function Quotations() {
                           q.status,
                         )}`}
                         value={normalizeStatus(q.status)}
-                        onChange={(e) => handleStatusChange(q.id, e.target.value)}
+                        onChange={(e) => handleStatusChange(q, e.target.value)}
                         disabled={savingStatusId === q.id}
                       >
                         <option value="pending">pending</option>

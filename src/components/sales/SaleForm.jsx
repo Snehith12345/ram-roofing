@@ -9,6 +9,8 @@ export default function SaleForm({
   address,
   paymentMethod,
   taxRate,
+  needShipping,
+  shippingCharge,
   subtotal,
   taxAmount,
   total,
@@ -51,14 +53,33 @@ export default function SaleForm({
           />
         </div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 sm:mt-4">
-          <Input
-            label="Address"
-            name="address"
-            value={address}
-            onChange={(e) => onCustomerChange({ address: e.target.value })}
-            required
-            autoComplete="street-address"
-          />
+          <div className="flex flex-col gap-2">
+            <Input
+              label="Address"
+              name="address"
+              value={address}
+              onChange={(e) => onCustomerChange({ address: e.target.value })}
+              required
+              autoComplete="street-address"
+            />
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={needShipping}
+                onChange={(e) => onCustomerChange({ needShipping: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+              />
+              Need shipping
+            </label>
+            {needShipping && (
+              <Input
+                label="Shipping charges"
+                type="number"
+                value={String(shippingCharge)}
+                onChange={(e) => onCustomerChange({ shippingCharge: Number(e.target.value || 0) })}
+              />
+            )}
+          </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Payment method</label>
             <select
@@ -93,13 +114,10 @@ export default function SaleForm({
         onRemove={onRemoveLine}
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className={`grid grid-cols-1 gap-3 sm:gap-4 ${needShipping ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
         <Input
           label="Tax (%)"
           type="number"
-          min="0"
-          max="100"
-          step="0.01"
           value={String(taxRate)}
           onChange={(e) => onCustomerChange({ taxRate: Math.max(0, Number(e.target.value || 0)) })}
         />
@@ -111,6 +129,12 @@ export default function SaleForm({
           <span className="mb-1 block text-sm font-medium text-gray-700">Tax amount</span>
           <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900">₹{taxAmount.toFixed(2)}</div>
         </div>
+        {needShipping && (
+          <div>
+            <span className="mb-1 block text-sm font-medium text-gray-700">Shipping</span>
+            <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900">₹{Number(shippingCharge || 0).toFixed(2)}</div>
+          </div>
+        )}
         <div>
           <span className="mb-1 block text-sm font-medium text-gray-700">Grand total</span>
           <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-gray-900 font-semibold">₹{total.toFixed(2)}</div>

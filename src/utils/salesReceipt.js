@@ -109,6 +109,11 @@ export function openSalesReceiptWindow(sale, opts = {}) {
               ? `<div class="total-line">Tax (${Number(sale.taxRate || 0).toFixed(2)}%): ₹${Number(sale.taxAmount || 0).toFixed(2)}</div>`
               : ""
           }
+          ${
+            sale.needShipping && Number(sale.shippingCharge) >= 0
+              ? `<div class="total-line">Shipping: ₹${Number(sale.shippingCharge || 0).toFixed(2)}</div>`
+              : ""
+          }
           <div class="total-line grand-total">Total: ₹${Number(sale.total || 0).toFixed(2)}</div>
         </div>
 

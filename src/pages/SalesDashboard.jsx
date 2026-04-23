@@ -37,6 +37,19 @@ export default function SalesDashboard() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
   const [initialLoad, setInitialLoad] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSales = useMemo(() => {
+    if (!searchQuery.trim()) return sales;
+    const lower = searchQuery.toLowerCase();
+    return sales.filter((s) => {
+      const sId = String(s.id || "").toLowerCase();
+      const cName = String(s.customerName || "").toLowerCase();
+      const mobile = String(s.mobile || "").toLowerCase();
+      const dateStr = formatDateTime(toJsDate(s.createdAt)).toLowerCase();
+      return sId.includes(lower) || cName.includes(lower) || mobile.includes(lower) || dateStr.includes(lower);
+    });
+  }, [sales, searchQuery]);
 
   useEffect(() => {
     const unsub = subscribeSales(
@@ -145,18 +158,27 @@ export default function SalesDashboard() {
       </div>
 
       <div className="card">
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-base font-semibold text-gray-900 sm:text-lg">All sales ({stats.totalCount})</h3>
+          <input
+            type="search"
+            placeholder="Search by ID, name, mobile, date..."
+            className="w-full sm:max-w-md rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        {!sales.length ? (
-          <div className="py-6 text-center text-sm text-gray-500">No sales recorded yet.</div>
+        {!filteredSales.length ? (
+          <div className="py-6 text-center text-sm text-gray-500">No sales found.</div>
         ) : (
           <div className="overflow-x-auto rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="table-header text-left">Order ID</th>
                   <th className="table-header text-left">When</th>
                   <th className="table-header text-left">Customer</th>
+                  <th className="table-header text-left">Mobile</th>
                   <th className="table-header text-left">Payment</th>
                   <th className="table-header text-right">Subtotal</th>
                   <th className="table-header text-right">Tax</th>
@@ -165,10 +187,12 @@ export default function SalesDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {sales.map((s) => (
+                {filteredSales.map((s) => (
                   <tr key={s.id} className="hover:bg-gray-50">
+                    <td className="table-cell font-mono text-xs">{s.id}</td>
                     <td className="table-cell">{formatDateTime(toJsDate(s.createdAt))}</td>
                     <td className="table-cell">{s.customerName}</td>
+                    <td className="table-cell">{s.mobile || "—"}</td>
                     <td className="table-cell capitalize">{s.paymentMethod || "cash"}</td>
                     <td className="table-cell text-right">{formatCurrency(s.subtotal ?? s.total ?? 0)}</td>
                     <td className="table-cell text-right">{formatCurrency(s.taxAmount ?? 0)}</td>
