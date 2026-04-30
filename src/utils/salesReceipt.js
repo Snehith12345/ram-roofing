@@ -65,6 +65,7 @@ export function openSalesReceiptWindow(sale, opts = {}) {
       </head>
       <body>
         <div class="header">
+          <img src="${window.location.origin}/logo.jpg" alt="RAM ROOFING" style="max-height: 100px; margin-bottom: 10px;" onerror="this.style.display='none'" />
           <div class="company-name">RAM ROOFING INDUSTRIES</div>
           <div class="document-type">SALES RECEIPT</div>
         </div>
