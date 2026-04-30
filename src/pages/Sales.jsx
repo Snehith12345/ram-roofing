@@ -21,7 +21,7 @@ export default function Sales() {
   const [mobile, setMobile] = useState(prefill?.mobile || "");
   const [address, setAddress] = useState(prefill?.address || "");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [taxRate, setTaxRate] = useState(0);
+  const [taxRate, setTaxRate] = useState("");
   const [needShipping, setNeedShipping] = useState(false);
   const [shippingCharge, setShippingCharge] = useState(0);
 
@@ -31,10 +31,10 @@ export default function Sales() {
         id: item.id || "",
         name: item.name || "",
         price: item.price || 0,
-        qty: item.qty || 1,
+        qty: item.qty || "",
         unit: item.unit || "units",
       }))
-    : [{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }];
+    : [{ key: newLineKey(), id: "", name: "", price: 0, qty: "", unit: "units" }];
 
   const [lines, setLines] = useState(initialLines);
   const [error, setError] = useState("");
@@ -126,10 +126,10 @@ export default function Sales() {
       setMobile("");
       setAddress("");
       setPaymentMethod("cash");
-      setTaxRate(0);
+      setTaxRate("");
       setNeedShipping(false);
       setShippingCharge(0);
-      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }]);
+      setLines([{ key: newLineKey(), id: "", name: "", price: 0, qty: "", unit: "units" }]);
     } catch (e) {
       setError(e?.message || "Could not complete sale.");
     } finally {
@@ -181,7 +181,7 @@ export default function Sales() {
           total={total}
           lines={lines}
           onLinesChange={setLines}
-          onAddLine={() => setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: 1, unit: "units" }])}
+          onAddLine={() => setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: "", unit: "units" }])}
           onRemoveLine={(idx) => setLines((ls) => ls.filter((_, i) => i !== idx))}
           onSubmit={submit}
           submitting={submitting}

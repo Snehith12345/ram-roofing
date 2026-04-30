@@ -118,8 +118,8 @@ export default function SaleForm({
         <Input
           label="Tax (%)"
           type="number"
-          value={String(taxRate)}
-          onChange={(e) => onCustomerChange({ taxRate: Math.max(0, Number(e.target.value || 0)) })}
+          value={taxRate === "" ? "" : String(taxRate)}
+          onChange={(e) => onCustomerChange({ taxRate: e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) })}
         />
         <div>
           <span className="mb-1 block text-sm font-medium text-gray-700">Subtotal</span>

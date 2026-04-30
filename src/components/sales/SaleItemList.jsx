@@ -36,12 +36,12 @@ export default function SaleItemList({ inventory, lines, onChange, onRemove }) {
             <Input
               label={`Qty (${normalizeUnit(line.unit)})`}
               type="number"
-              min="1"
-              value={String(line.qty)}
+
+              value={line.qty === "" ? "" : String(line.qty)}
               onChange={(e) =>
                 onChange(idx, {
                   ...line,
-                  qty: Math.max(1, Number(e.target.value || 1)),
+                  qty: e.target.value === "" ? "" : Number(e.target.value),
                 })
               }
             />
