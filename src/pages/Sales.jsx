@@ -214,7 +214,7 @@ export default function Sales() {
               disabled={isSharing}
               onClick={async () => {
                 setIsSharing(true);
-                await shareViaWhatsApp(completedSale, "Sale");
+                await shareViaWhatsApp(completedSale, "Sale", { soldBy: soldByLabel });
                 setIsSharing(false);
                 setCompletedSale(null);
               }}

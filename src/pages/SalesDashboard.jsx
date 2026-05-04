@@ -207,7 +207,7 @@ export default function SalesDashboard() {
                         disabled={!!shareLoadingId}
                         onClick={async () => {
                           setShareLoadingId(s.id);
-                          await shareViaWhatsApp(s, "Sale");
+                          await shareViaWhatsApp(s, "Sale", { soldBy: user?.email || user?.uid || "" });
                           setShareLoadingId("");
                         }}
                       >

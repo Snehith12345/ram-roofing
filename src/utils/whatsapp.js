@@ -34,24 +34,29 @@ export function generateWhatsAppLink(data, type = "Sale", extraText = "") {
   return `https://wa.me/?text=${encodedText}`;
 }
 
-export async function shareViaWhatsApp(data, type = "Sale") {
+export async function shareViaWhatsApp(data, type = "Sale", opts = {}) {
   try {
     const isQuotation = type === "Quotation";
-    const htmlString = isQuotation ? generateQuotationReceiptHTML(data) : generateSalesReceiptHTML(data);
+    const htmlString = isQuotation ? generateQuotationReceiptHTML(data) : generateSalesReceiptHTML(data, opts);
     
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '800px';
+    iframe.style.height = '600px';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.visibility = 'hidden';
     document.body.appendChild(iframe);
     iframe.contentDocument.write(htmlString);
     iframe.contentDocument.close();
     
-    const element = iframe.contentDocument.body; // or documentElement
+    const element = iframe.contentDocument.documentElement;
     
     const opt = {
       margin:       10,
       filename:     `${isQuotation ? 'Quotation' : 'Receipt'}_${data.id}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
