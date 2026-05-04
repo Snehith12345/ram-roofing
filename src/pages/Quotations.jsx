@@ -13,6 +13,7 @@ import { openQuotationReceiptWindow } from "../utils/quotationReceipt.js";
 import Button from "../components/common/Button.jsx";
 import InitialLoadPlaceholder from "../components/common/InitialLoadPlaceholder.jsx";
 import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js";
+import { shareViaWhatsApp } from "../utils/whatsapp.js";
 
 export default function Quotations() {
   const navigate = useNavigate();
@@ -20,10 +21,13 @@ export default function Quotations() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
   const [printLoadingId, setPrintLoadingId] = useState("");
+  const [shareLoadingId, setShareLoadingId] = useState("");
   const [showNewQuotation, setShowNewQuotation] = useState(false);
   const [savingStatusId, setSavingStatusId] = useState("");
   const [quotationsReady, setQuotationsReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [completedQuotation, setCompletedQuotation] = useState(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   const filteredRows = useMemo(() => {
     if (!searchQuery.trim()) return rows;
@@ -176,6 +180,19 @@ export default function Quotations() {
                         type="button"
                         variant="ghost"
                         className="mr-1 inline-flex"
+                        disabled={!!shareLoadingId}
+                        onClick={async () => {
+                          setShareLoadingId(q.id);
+                          await shareViaWhatsApp(q, "Quotation");
+                          setShareLoadingId("");
+                        }}
+                      >
+                        {shareLoadingId === q.id ? "Preparing PDF…" : "Share"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="mr-1 inline-flex"
                         disabled={!!printLoadingId}
                         onClick={() => handlePrintQuotation(q)}
                       >
@@ -223,10 +240,41 @@ export default function Quotations() {
           <QuotationForm
             inventory={inventory}
             onSubmit={async (payload) => {
-              await createQuotation(payload);
+              const qId = await createQuotation(payload);
               setShowNewQuotation(false);
+              setCompletedQuotation({ id: qId, ...payload });
             }}
           />
+        </Modal>
+      ) : null}
+
+      {completedQuotation ? (
+        <Modal title="Quotation Saved" onClose={() => setCompletedQuotation(null)}>
+          <p className="mb-6 text-gray-700">The quotation has been saved successfully. What would you like to do next?</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                handlePrintQuotation(completedQuotation);
+                setCompletedQuotation(null);
+              }}
+            >
+              Print Quotation
+            </Button>
+            <Button
+              type="button"
+              disabled={isSharing}
+              onClick={async () => {
+                setIsSharing(true);
+                await shareViaWhatsApp(completedQuotation, "Quotation");
+                setIsSharing(false);
+                setCompletedQuotation(null);
+              }}
+            >
+              {isSharing ? "Generating PDF…" : "Share via WhatsApp"}
+            </Button>
+          </div>
         </Modal>
       ) : null}
     </div>

@@ -22,10 +22,7 @@ function escapeHtml(s) {
  * @param {string} [quotation.status]
  * @returns {boolean} false if popup blocked
  */
-export function openQuotationReceiptWindow(quotation) {
-  const receiptWindow = window.open("", "_blank", "width=800,height=600");
-  if (!receiptWindow) return false;
-
+export function generateQuotationReceiptHTML(quotation) {
   const created = toJsDate(quotation.createdAt) ?? new Date();
   const dateStr = created.toLocaleDateString();
   const timeStr = created.toLocaleTimeString();
@@ -114,6 +111,14 @@ export function openQuotationReceiptWindow(quotation) {
       </html>
     `;
 
+  return receiptHTML;
+}
+
+export function openQuotationReceiptWindow(quotation) {
+  const receiptWindow = window.open("", "_blank", "width=800,height=600");
+  if (!receiptWindow) return false;
+
+  const receiptHTML = generateQuotationReceiptHTML(quotation);
   receiptWindow.document.write(receiptHTML);
   receiptWindow.document.close();
   setTimeout(() => {

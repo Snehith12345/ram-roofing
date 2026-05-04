@@ -6,6 +6,9 @@ import { subscribeInventory } from "../api/inventory.js";
 import SaleForm from "../components/sales/SaleForm.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { openSalesReceiptWindow } from "../utils/salesReceipt.js";
+import { shareViaWhatsApp } from "../utils/whatsapp.js";
+import Modal from "../components/common/Modal.jsx";
+import Button from "../components/common/Button.jsx";
 
 function newLineKey() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -39,9 +42,11 @@ export default function Sales() {
   const [lines, setLines] = useState(initialLines);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [receiptError, setReceiptError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [invError, setInvError] = useState("");
+  const [completedSale, setCompletedSale] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeInventory(
@@ -115,13 +120,9 @@ export default function Sales() {
            console.error("Failed to update quotation status", e);
          }
       }
-      const completedSale = { id, ...salePayload };
-      const opened = openSalesReceiptWindow(completedSale, { soldBy: soldByLabel });
-      if (!opened) {
-        setReceiptError("Sale saved. Allow pop-ups to print the receipt, or use browser print from this page.");
-      } else {
-        setSuccessMessage("Sale completed and receipt opened for printing.");
-      }
+      const completed = { id, ...salePayload };
+      setCompletedSale(completed);
+      setSuccessMessage("Sale completed successfully.");
       setCustomerName("");
       setMobile("");
       setAddress("");
@@ -192,6 +193,37 @@ export default function Sales() {
           <span className="text-lg font-bold text-gray-900">₹{total.toFixed(2)}</span>
         </div>
       </div>
+
+      {completedSale ? (
+        <Modal title="Sale Successful" onClose={() => setCompletedSale(null)}>
+          <p className="mb-6 text-gray-700">The sale has been saved. What would you like to do next?</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                const opened = openSalesReceiptWindow(completedSale, { soldBy: soldByLabel });
+                if (!opened) setReceiptError("Please allow pop-ups to print the receipt.");
+                setCompletedSale(null);
+              }}
+            >
+              Print Receipt
+            </Button>
+            <Button
+              type="button"
+              disabled={isSharing}
+              onClick={async () => {
+                setIsSharing(true);
+                await shareViaWhatsApp(completedSale, "Sale");
+                setIsSharing(false);
+                setCompletedSale(null);
+              }}
+            >
+              {isSharing ? "Generating PDF…" : "Share via WhatsApp"}
+            </Button>
+          </div>
+        </Modal>
+      ) : null}
     </div>
   );
 }

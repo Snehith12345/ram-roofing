@@ -72,15 +72,6 @@ export default function QuotationForm({ inventory, onSubmit }) {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Items</h3>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() =>
-            setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: "", isCustom: false, unit: "units" }])
-          }
-        >
-          + Add line
-        </Button>
       </div>
 
       {lines.map((line, idx) => (
@@ -182,6 +173,18 @@ export default function QuotationForm({ inventory, onSubmit }) {
           </div>
         </div>
       ))}
+
+      <div className="flex justify-start">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            setLines((ls) => [...ls, { key: newLineKey(), id: "", name: "", price: 0, qty: "", isCustom: false, unit: "units" }])
+          }
+        >
+          + Add line
+        </Button>
+      </div>
 
       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
         <div className="text-sm text-gray-600">Quotation total</div>

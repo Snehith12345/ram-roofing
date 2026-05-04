@@ -98,9 +98,6 @@ export default function SaleForm({
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-base font-semibold text-gray-900 sm:text-lg">Items</h2>
-        <Button type="button" variant="secondary" onClick={onAddLine}>
-          + Add line
-        </Button>
       </div>
 
       <SaleItemList
@@ -113,6 +110,12 @@ export default function SaleForm({
         }}
         onRemove={onRemoveLine}
       />
+
+      <div className="flex justify-start">
+        <Button type="button" variant="secondary" onClick={onAddLine}>
+          + Add line
+        </Button>
+      </div>
 
       <div className={`grid grid-cols-1 gap-3 sm:gap-4 ${needShipping ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
         <Input

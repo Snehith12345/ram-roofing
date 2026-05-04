@@ -23,10 +23,7 @@ function escapeHtml(s) {
  * @param {{ soldBy?: string }} [opts]
  * @returns {boolean} false if popup blocked
  */
-export function openSalesReceiptWindow(sale, opts = {}) {
-  const receiptWindow = window.open("", "_blank", "width=800,height=600");
-  if (!receiptWindow) return false;
-
+export function generateSalesReceiptHTML(sale, opts = {}) {
   const soldBy = opts.soldBy?.trim() || "—";
   const items = Array.isArray(sale.items) ? sale.items : [];
   const rows = items
@@ -126,6 +123,14 @@ export function openSalesReceiptWindow(sale, opts = {}) {
       </html>
     `;
 
+  return receiptHTML;
+}
+
+export function openSalesReceiptWindow(sale, opts = {}) {
+  const receiptWindow = window.open("", "_blank", "width=800,height=600");
+  if (!receiptWindow) return false;
+
+  const receiptHTML = generateSalesReceiptHTML(sale, opts);
   receiptWindow.document.write(receiptHTML);
   receiptWindow.document.close();
   setTimeout(() => {

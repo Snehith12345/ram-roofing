@@ -5,6 +5,7 @@ import { formatCurrency, formatDateTime, toJsDate } from "../utils/dateUtils.js"
 import Button from "../components/common/Button.jsx";
 import { openSalesReceiptWindow } from "../utils/salesReceipt.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { shareViaWhatsApp } from "../utils/whatsapp.js";
 
 const PAYMENT_METHODS = ["cash", "card", "cheque", "upi"];
 
@@ -36,6 +37,7 @@ export default function SalesDashboard() {
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [shareLoadingId, setShareLoadingId] = useState("");
   const [initialLoad, setInitialLoad] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -198,6 +200,19 @@ export default function SalesDashboard() {
                     <td className="table-cell text-right">{formatCurrency(s.taxAmount ?? 0)}</td>
                     <td className="table-cell text-right font-semibold">{formatCurrency(s.total)}</td>
                     <td className="table-cell text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="mr-1 inline-flex"
+                        disabled={!!shareLoadingId}
+                        onClick={async () => {
+                          setShareLoadingId(s.id);
+                          await shareViaWhatsApp(s, "Sale");
+                          setShareLoadingId("");
+                        }}
+                      >
+                        {shareLoadingId === s.id ? "Preparing PDF…" : "Share"}
+                      </Button>
                       <Button type="button" variant="ghost" className="mr-1 inline-flex" onClick={() => handleReprint(s)}>
                         Reprint
                       </Button>
